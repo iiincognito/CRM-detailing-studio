@@ -1,4 +1,4 @@
-package repository
+package dto
 
 import (
 	"github.com/google/uuid"
@@ -10,6 +10,8 @@ type UserModel struct {
 	FIO      string
 	Email    string
 	Phone    string
-	birthday time.Time
-	passHash string
+	Birthday time.Time
+	PassHash string
+	Created  time.Time
+	Updated  time.Time
 }
