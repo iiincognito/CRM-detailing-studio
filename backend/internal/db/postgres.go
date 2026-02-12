@@ -1,27 +1,30 @@
 package db
 
 import (
-	"database/sql"
+	"context"
+	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
-func Connect() (*sql.DB, error) {
+func Connect(ctx context.Context) (*pgxpool.Pool, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	dbConn := os.Getenv("CONN_DB")
-	db, err := sql.Open("postgres", dbConn)
+	config, err := pgxpool.ParseConfig(dbConn)
 	if err != nil {
 		return nil, err
 	}
-	err = db.Ping()
+	config.MaxConns = 100
+	config.MinConns = 10
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
-		log.Println("Error pinging database")
-		db.Close()
+		defer pool.Close()
 		return nil, err
 	}
-	return db, nil
+	return pool, nil
 }
