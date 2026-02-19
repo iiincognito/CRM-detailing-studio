@@ -21,9 +21,20 @@ export default defineComponent({
     errorText: {
       type: String,
       default: ''
+    },
+    isShowError: {
+      type: Boolean,
+      default: false
     }
   },
-  emits: ['update:modelValue']
+  emits: ['update:modelValue', 'onInput'],
+  methods: {
+    handleInput(event: Event) {
+      const value = (event.target as HTMLInputElement).value;
+      this.$emit('update:modelValue', value);  // для v-model
+      this.$emit('onInput', value);            // дополнительный emit
+    }
+  }
 })
 </script>
 
@@ -36,14 +47,14 @@ export default defineComponent({
         class="custom-input__element"
         :class="[
             {
-              'custom-input__element-error' : errorText,
+              'custom-input__element-error' : errorText || isShowError,
             }
         ]"
         :value="modelValue"
         :placeholder="placeholder"
         :type="type"
         :disabled="disabled"
-        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+        @input="handleInput"
         v-bind="$attrs"
     />
     <div v-if="errorText" class="custom-input__error">

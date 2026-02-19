@@ -12,22 +12,148 @@ export default defineComponent({
   },
   data() {
     return {
-      authState: 'authorization' as TAuthState,
+      authState: 'registration' as TAuthState,
       userData: {
         name: '',
         email: '',
         phone: '',
         password: '',
-        date_of_birth: ''
+        date_of_birth: {
+          first: '',
+          second: '',
+          third: ''
+        }
+      },
+      identificationCode: {
+        first: '',
+        second: '',
+        third: '',
+        four: ''
       },
       userErrors: {
         name: '',
         email: '',
         phone: '',
         password: '',
-        date_of_birth: ''
-      }
+        date_of_birth: {
+          text: ''
+        }
+      },
+      identificationCodeError: {
+        first: '',
+        second: '',
+        third: '',
+        four: '',
+        text: ''
+      },
     }
+  },
+  methods: {
+    resetErrors() {
+      this.userErrors =  {
+        name: '',
+            email: '',
+            phone: '',
+            password: '',
+            date_of_birth: {
+          text: ''
+        }
+      }
+      this.identificationCodeError = {
+        first: '',
+            second: '',
+            third: '',
+            four: '',
+            text: ''
+      }
+    },
+    validation(authState: TAuthState) {
+      if (authState == 'registration') {
+        if (this.userData.name.length === 0) {
+          this.userErrors.name = 'Введите имя'
+          return false;
+        } else if (this.userData.name.length < 2) {
+          this.userErrors.name = 'Короткое имя'
+          return false;
+        }
+
+        if (this.userData.email.length === 0) {
+          this.userErrors.email = 'Введите электронную почту'
+          return false;
+        } else if (!/^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$/.test(this.userData.email)) {
+          this.userErrors.email = 'Неверный формат email';
+          return false;
+        }
+
+        if (this.userData.phone.length === 0) {
+          this.userErrors.phone = 'Введите номер телефона'
+          return false;
+        } else if (this.userData.phone.length < 11) {
+          this.userErrors.phone = 'Введите корректный сотовый телефон'
+          return false;
+        }
+
+        if (this.userData.password.length === 0) {
+          this.userErrors.password = 'Введите пароль'
+          return false;
+        } else if (this.userData.password.length < 6) {
+          this.userErrors.password = 'Данный пароль короткий'
+          return false;
+        }
+
+        if (this.userData.date_of_birth.first.length === 0 &&
+            this.userData.date_of_birth.second.length === 0 &&
+            this.userData.date_of_birth.third.length === 0) {
+          this.userErrors.date_of_birth.text = 'Введите дату рождения'
+          return false;
+        } else if (this.userData.date_of_birth.first.length === 0 ||
+            this.userData.date_of_birth.second.length === 0 ||
+            this.userData.date_of_birth.third.length === 0) {
+          this.userErrors.date_of_birth.text = 'Заполните дату рождения до конца'
+          return false;
+        }
+      } else if (authState === 'authorization') {
+        if (this.userData.email.length === 0) {
+          this.userErrors.email = 'Введите электронную почту'
+          return false;
+        } else if (!/^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$/.test(this.userData.email)) {
+          this.userErrors.email = 'Неверный формат email';
+          return false;
+        }
+
+        if (this.userData.password.length === 0) {
+          this.userErrors.password = 'Введите пароль'
+          return false;
+        }
+      } else if (authState === 'identification') {
+        const code = this.identificationCode;
+        const error = this.identificationCodeError;
+
+        const hasEmpty = ['first', 'second', 'third', 'four'].some(field => {
+          if (code[field as keyof typeof code].length === 0) {
+            error[field as keyof typeof error] = '+';
+            return true;
+          }
+          return false;
+        });
+
+        if (hasEmpty) return false;
+      }
+      return true;
+    },
+    submit() {
+      const isValid = this.validation(this.authState);
+      if (!isValid) return;
+      if (this.authState === 'registration') {
+        console.log('Здесь будет асинхронный запрос на регистрацию')
+        this.authState = 'identification'
+      } else if (this.authState === 'authorization') {
+        console.log('Здесь будет асинхронный запрос на авторизацию')
+        this.authState = 'identification'
+      } else if (this.authState === 'identification') {
+        console.log('Здесь будет асинхронный запрос на идентификацию')
+      }
+    },
   }
 })
 </script>
@@ -40,17 +166,36 @@ export default defineComponent({
           <div class="auth-title">
             Вход
           </div>
-          <div class="auth-mode">
+          <div @click="authState = 'registration'" class="auth-mode">
             Регистрация
           </div>
         </div>
         <div class="auth-body">
-          <UIInput error-text="pizda" title="Эл. почта" v-model="userData.email" placeholder="Введите эл.почту" />
-          <UIInput title="Пароль" v-model="userData.password" placeholder="Введите пароль" />
+          <UIInput
+              title="Эл. почта"
+              :error-text="userErrors.email"
+              v-model="userData.email"
+              placeholder="Введите эл.почту"
+          />
+          <UIInput
+              title="Пароль"
+              :error-text="userErrors.password"
+              v-model="userData.password"
+              placeholder="Введите пароль"
+          />
         </div>
         <div class="auth-footer">
-          <UIButton name="Войти" theme="colored" />
-          <UIButton name="У меня еще нет аккаунта" font-size="small" theme="whited" />
+          <UIButton
+              name="Войти"
+              theme="colored"
+              @click="submit"
+          />
+          <UIButton
+              name="У меня еще нет аккаунта"
+              font-size="small"
+              theme="whited"
+              @click="authState = 'registration'"
+          />
         </div>
       </div>
       <div v-if="authState == 'registration'" class="auth-wrapper">
@@ -58,35 +203,125 @@ export default defineComponent({
           <div class="auth-title">
             Регистрация
           </div>
-          <div class="auth-mode">
+          <div @click="authState = 'authorization'" class="auth-mode">
             Вход
           </div>
         </div>
         <div class="auth-body">
-          <UIInput title="Имя" v-model="userData.name" placeholder="Имя" />
-          <UIInput title="Эл. почта" v-model="userData.email" placeholder="Эл. почта" />
-          <UIInput title="Номер телефона" v-model="userData.email" placeholder="Номер телефона" />
-          <div class="auth-row">
-            <UIInput title="Дата рождения" v-model="userData.name" placeholder="ДД" />
-            <UIInput title=" " v-model="userData.email" placeholder="ММ" />
-            <UIInput title=" " v-model="userData.email" placeholder="ГГГГ" />
+          <UIInput
+              title="Имя"
+              :error-text="userErrors.name"
+              v-model="userData.name"
+              placeholder="Имя"
+              @onInput="resetErrors"
+          />
+          <UIInput
+              title="Эл. почта"
+              :error-text="userErrors.email"
+              v-model="userData.email"
+              placeholder="Эл. почта"
+              @onInput="resetErrors"
+          />
+          <UIInput
+              title="Номер телефона"
+              :error-text="userErrors.phone"
+              v-model="userData.phone"
+              placeholder="Номер телефона"
+              @onInput="resetErrors"
+          />
+          <UIInput
+              title="Пароль"
+              v-model="userData.password"
+              :error-text="userErrors.password"
+              placeholder="Пароль"
+              @onInput="resetErrors"
+          />
+          <div class="auth-body">
+            <div class="auth-row">
+              <UIInput
+                  title="Дата рождения"
+                  :is-show-error="userErrors.date_of_birth.text.length > 0"
+                  v-model="userData.date_of_birth.first"
+                  placeholder="ДД"
+                  @onInput="resetErrors"
+              />
+              <UIInput
+                  title=" "
+                  :is-show-error="userErrors.date_of_birth.text.length > 0"
+                  v-model="userData.date_of_birth.second"
+                  placeholder="ММ"
+                  @onInput="resetErrors"
+              />
+              <UIInput
+                  title=" "
+                  :is-show-error="userErrors.date_of_birth.text.length > 0"
+                  v-model="userData.date_of_birth.third"
+                  placeholder="ГГГГ"
+                  @onInput="resetErrors"
+              />
+            </div>
+            <div v-if="userErrors.date_of_birth.text" class="auth-error__text">
+              {{ userErrors.date_of_birth.text }}
+            </div>
           </div>
         </div>
         <div class="auth-footer">
-          <UIButton name="Зарегистрироваться" theme="colored" />
-          <UIButton name="У меня уже есть аккаунт пользователя" font-size="small" theme="whited" />
+          <UIButton
+              name="Зарегистрироваться"
+              theme="colored"
+              @click="submit"
+          />
+          <UIButton
+              name="У меня уже есть аккаунт пользователя"
+              font-size="small"
+              theme="whited"
+              @click="authState = 'authorization'"
+          />
         </div>
       </div>
       <div v-if="authState == 'identification'" class="auth-wrapper">
-        <div class="auth-row">
-          <UIInput v-model="userData.email" placeholder="0" />
-          <UIInput v-model="userData.password" placeholder="0" />
-          <UIInput v-model="userData.email" placeholder="0" />
-          <UIInput v-model="userData.password" placeholder="0" />
+        <div class="auth-body">
+          <div class="auth-row">
+            <UIInput
+                v-model="identificationCode.first"
+                placeholder="0"
+                @onInput="resetErrors"
+                :is-show-error="identificationCodeError.first.length > 0"
+            />
+            <UIInput
+                v-model="identificationCode.second"
+                placeholder="0"
+                @onInput="resetErrors"
+                :is-show-error="identificationCodeError.second.length > 0"
+            />
+            <UIInput
+                v-model="identificationCode.third"
+                placeholder="0"
+                @onInput="resetErrors"
+                :is-show-error="identificationCodeError.third.length > 0"
+            />
+            <UIInput
+                v-model="identificationCode.four"
+                placeholder="0"
+                @onInput="resetErrors"
+                :is-show-error="identificationCodeError.four.length > 0"
+            />
+          </div>
+          <div v-if="identificationCodeError.text" class="auth-error__text">
+            {{ identificationCodeError.text }}
+          </div>
         </div>
         <div class="auth-footer">
-          <UIButton name="Подтвердить" theme="colored" />
-          <UIButton name="Выслать код повторно" font-size="small" theme="whited" />
+          <UIButton
+              name="Подтвердить"
+              theme="colored"
+              @click="submit"
+          />
+          <UIButton
+              name="Выслать код повторно"
+              font-size="small"
+              theme="whited"
+          />
         </div>
       </div>
     </Popup>
