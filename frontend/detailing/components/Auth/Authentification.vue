@@ -21,7 +21,8 @@ export default defineComponent({
         date_of_birth: {
           first: '',
           second: '',
-          third: ''
+          third: '',
+          result: ''
         }
       },
       identificationCode: {
@@ -141,11 +142,20 @@ export default defineComponent({
       }
       return true;
     },
-    submit() {
-      const isValid = this.validation(this.authState);
-      if (!isValid) return;
+    async submit() {
       if (this.authState === 'registration') {
-        console.log('Здесь будет асинхронный запрос на регистрацию')
+        const forRequest = {
+          FIO: 'pidoras',
+          Phone: '89503215476',
+          Password: 'almaz_pidr',
+          Birthday: '2002-02-28',
+          Email: 'aidar-dev@mail.ru'
+        }
+        const result = await $fetch('https://lot-initial-silver-gourmet.trycloudflare.com/api/v1/auth/register', {
+          method: 'POST',
+          body: forRequest
+        })
+        console.log('Успешно отправлено:', result)
         this.authState = 'identification'
       } else if (this.authState === 'authorization') {
         console.log('Здесь будет асинхронный запрос на авторизацию')
